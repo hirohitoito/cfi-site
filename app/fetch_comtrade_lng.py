@@ -10,7 +10,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 BASE_URL = "https://comtradeapi.un.org/public/v1/preview/C/A/HS"
 
 
-def fetch_comtrade(reporter_code, partner_code, cmd_code, flow_code, period):
+def fetch_comtrade(reporter_code, partner_code, cmd_code, flow_code, period, max_retries=5):
     params = {
         "reporterCode": reporter_code,
         "partnerCode": partner_code,
@@ -19,9 +19,20 @@ def fetch_comtrade(reporter_code, partner_code, cmd_code, flow_code, period):
         "period": period,
     }
 
-    response = requests.get(BASE_URL, params=params, timeout=30)
-    response.raise_for_status()
-    return response.json().get("data", [])
+    for attempt in range(max_retries):
+        r = requests.get(BASE_URL, params=params, timeout=30)
+
+        if r.status_code == 429:
+            wait = 10 * (attempt + 1)
+            print(f"  429 Too Many Requests. Waiting {wait} seconds...")
+            time.sleep(wait)
+            continue
+
+        r.raise_for_status()
+        return r.json().get("data", [])
+
+    print(f"  Failed after retries: {params}")
+    return []
 
 
 def first_record(data):
@@ -53,6 +64,8 @@ def main():
             )
         )
 
+        time.sleep(3)
+
         australia_export = first_record(
             fetch_comtrade(
                 reporter_code=36,
@@ -62,6 +75,8 @@ def main():
                 period=period,
             )
         )
+
+        time.sleep(8)
 
         if japan_import is None or australia_export is None:
             print(f"  Skipped {period}: missing data")
@@ -79,8 +94,6 @@ def main():
             print(f"  Skipped {period}: missing value or quantity")
             continue
 
-        lng_freight_proxy = japan_cif_unit - australia_fob_unit
-
         rows.append(
             {
                 "period": period,
@@ -92,11 +105,9 @@ def main():
                 "australia_export_fob_value": australia_fob_value,
                 "australia_export_qty": australia_qty,
                 "australia_fob_unit_value": australia_fob_unit,
-                "lng_freight_proxy": lng_freight_proxy,
+                "lng_freight_proxy": japan_cif_unit - australia_fob_unit,
             }
         )
-
-        time.sleep(1)
 
     result = pd.DataFrame(rows)
     out_path = OUT_DIR / "lng_freight_proxy_comtrade.csv"

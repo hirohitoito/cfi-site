@@ -52,13 +52,21 @@ HTML_TEMPLATE = """
 
 <section class="section light">
   <h2>Signals</h2>
-  <p>Selected indicators and structural proxies derived from public data, trade statistics, and flow observations.</p>
+  <p>Selected indicators and structural proxies derived from trade and price data.</p>
+
   <div class="signal-grid">
-    <div class="signal">Market Signals<br><small>CIF–FOB freight proxies</small></div>
-    <div class="signal">Flow Signals<br><small>Routes, ports, vessel movement</small></div>
-    <div class="signal">Network Signals<br><small>Connectivity and centrality</small></div>
-    <div class="signal">Infrastructure Signals<br><small>Capacity, queues, terminals</small></div>
+    <div class="signal">Market Signals<br><small>CIF–FOB proxies</small></div>
+    <div class="signal">Flow Signals<br><small>Routes, ports</small></div>
+    <div class="signal">Network Signals<br><small>Connectivity</small></div>
+    <div class="signal">Infrastructure Signals<br><small>Capacity</small></div>
   </div>
+
+  <div class="chart-card">
+    <h3>Freight Proxy: CIF - FOB</h3>
+    <p>Estimated logistics cost embedded in commodity prices.</p>
+    <img src="static/charts/freight_proxy.png" style="width:100%; max-width:800px;">
+  </div>
+
 </section>
 
 <footer class="footer">
@@ -72,34 +80,24 @@ HTML_TEMPLATE = """
 articles = [
     {
         "category": "Commodities",
-        "title": "From LNG to Oil: How Substitution Actually Happens",
-        "description": "Price shocks do not move markets alone. Substitution depends on infrastructure, logistics, and industrial constraints.",
-        "tags": ["LNG", "Oil", "Substitution"],
+        "title": "From LNG to Oil: Substitution Dynamics",
+        "description": "Price changes propagate through constrained industrial systems.",
+        "tags": ["LNG", "Oil"],
     },
     {
         "category": "Shipping",
-        "title": "Container Hubs as Networks",
-        "description": "Port competitiveness depends not only on facilities, but on position inside evolving trade networks.",
-        "tags": ["Containers", "Ports", "Network"],
-    },
-    {
-        "category": "Passenger Flow",
-        "title": "Cruise Terminals as Flow Systems",
-        "description": "Passenger flows, queues, and CIQ capacity can be analyzed as constrained infrastructure systems.",
-        "tags": ["Cruise", "Queueing", "CIQ"],
+        "title": "Ports as Network Positions",
+        "description": "Ports compete as nodes in networks, not isolated assets.",
+        "tags": ["Ports", "Network"],
     },
 ]
 
-def write_page(filename: str, title: str = ""):
-    template = Template(HTML_TEMPLATE)
-    html = template.render(articles=articles)
-    output_path = PUBLIC_DIR / filename
-    output_path.write_text(html, encoding="utf-8")
-
 def main():
     PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
-    write_page("index.html")
-    print("Built public/index.html")
+    template = Template(HTML_TEMPLATE)
+    html = template.render(articles=articles)
+    (PUBLIC_DIR / "index.html").write_text(html, encoding="utf-8")
+    print("Built index.html")
 
 if __name__ == "__main__":
     main()

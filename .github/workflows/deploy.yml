@@ -23,11 +23,6 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Fetch Comtrade data
-        run: |
-          python app/fetch_comtrade_lng.py
-          python app/fetch_comtrade_oil.py
-
       - name: Generate signals and site
         run: |
           python app/generate_signals.py

@@ -34,4 +34,4 @@ jobs:
           key: ${{ secrets.SAKURA_SSH_KEY }}
           source: "public/*"
           target: "/home/hirohitoito/www/cfi/"
-
+          strip_components: 1

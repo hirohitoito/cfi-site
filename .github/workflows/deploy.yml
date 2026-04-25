@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -22,11 +23,17 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Build site
+      - name: Fetch Comtrade data
         run: |
+          python app/fetch_comtrade_lng.py
+          python app/fetch_comtrade_oil.py
+
+      - name: Generate signals and site
+        run: |
+          python app/generate_signals.py
           python app/build_site.py
 
-      - name: Deploy via SSH
+      - name: Deploy website to Sakura
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SAKURA_HOST }}
@@ -35,3 +42,13 @@ jobs:
           source: "public/*"
           target: "/home/hirohitoito/www/cfi/"
           strip_components: 1
+
+      - name: Upload processed data to Sakura
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SAKURA_HOST }}
+          username: ${{ secrets.SAKURA_USER }}
+          key: ${{ secrets.SAKURA_SSH_KEY }}
+          source: "app/data/*.csv"
+          target: "/home/hirohitoito/cfi_data/processed/"
+          strip_components: 2

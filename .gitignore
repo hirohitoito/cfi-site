@@ -2,3 +2,11 @@
 # Large AIS raw data
 app/data/ais/
 *.zip
+
+# CFI large data
+app/data/ais/
+app/data/raw/
+app/data/processed/
+*.zip
+*.parquet
+*.feather

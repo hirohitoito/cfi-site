@@ -52,13 +52,13 @@ HTML_TEMPLATE = """
 
 <section class="section light">
   <h2>Signals</h2>
-  <p>Selected indicators and structural proxies derived from trade, price, and vessel movement data.</p>
+  <p>Selected indicators and structural proxies derived from trade, market, and vessel-side operational data.</p>
 
   <div class="signal-grid">
     <div class="signal">Market Signals<br><small>CIF–FOB proxies</small></div>
-    <div class="signal">Flow Signals<br><small>Routes, ports, vessel movement</small></div>
-    <div class="signal">Network Signals<br><small>Connectivity</small></div>
-    <div class="signal">Infrastructure Signals<br><small>Capacity and queues</small></div>
+    <div class="signal">Flow Signals<br><small>Vessel-side operational signals</small></div>
+    <div class="signal">Network Signals<br><small>Under development</small></div>
+    <div class="signal">Infrastructure Signals<br><small>Under development</small></div>
   </div>
 
   <div class="chart-card">
@@ -88,7 +88,7 @@ articles = [
         "category": "Commodities",
         "title": "From LNG to Oil: Substitution Dynamics",
         "description": "Price changes propagate through constrained industrial systems.",
-        "tags": ["LNG", "Oil"],
+        "tags": ["LNG", "Oil", "Substitution"],
     },
     {
         "category": "Shipping",

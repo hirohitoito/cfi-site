@@ -1,0 +1,4 @@
+
+# Large AIS raw data
+app/data/ais/
+*.zip

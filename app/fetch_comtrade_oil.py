@@ -10,7 +10,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 BASE_URL = "https://comtradeapi.un.org/public/v1/preview/C/A/HS"
 
 
-def fetch(reporter, partner, cmd, flow, period):
+def fetch(reporter, partner, cmd, flow, period, max_retries=5):
     params = {
         "reporterCode": reporter,
         "partnerCode": partner,
@@ -18,39 +18,67 @@ def fetch(reporter, partner, cmd, flow, period):
         "flowCode": flow,
         "period": period,
     }
-    r = requests.get(BASE_URL, params=params)
-    r.raise_for_status()
-    data = r.json().get("data", [])
-    return data[0] if data else None
+
+    for attempt in range(max_retries):
+        r = requests.get(BASE_URL, params=params, timeout=30)
+
+        if r.status_code == 429:
+            wait = 10 * (attempt + 1)
+            print(f"  429 Too Many Requests. Waiting {wait} seconds...")
+            time.sleep(wait)
+            continue
+
+        r.raise_for_status()
+        data = r.json().get("data", [])
+        return data[0] if data else None
+
+    print(f"  Failed after retries: {params}")
+    return None
 
 
-def unit(v, q):
-    if v is None or q in (None, 0):
+def unit(value, qty):
+    if value is None or qty in (None, 0):
         return None
-    return v / q
+    return value / qty
 
 
-rows = []
-for year in range(2018, 2025):
-    print(f"Fetching {year}...")
-    
-    jp = fetch(392, 0, "2709", "M", str(year))
-    au = fetch(36, 0, "2709", "X", str(year))
+def main():
+    rows = []
 
-    if not jp or not au:
-        continue
+    for year in range(2018, 2025):
+        print(f"Fetching {year}...")
 
-    cif = unit(jp.get("cifvalue"), jp.get("qty"))
-    fob = unit(au.get("fobvalue"), au.get("qty"))
+        jp = fetch(392, 0, "2709", "M", str(year))
+        time.sleep(3)
 
-    if cif and fob:
+        au = fetch(36, 0, "2709", "X", str(year))
+        time.sleep(8)
+
+        if not jp or not au:
+            print(f"  Skipped {year}: missing data")
+            continue
+
+        cif = unit(jp.get("cifvalue"), jp.get("qty"))
+        fob = unit(au.get("fobvalue"), au.get("qty"))
+
+        if cif is None or fob is None:
+            print(f"  Skipped {year}: missing cif/fob/qty")
+            continue
+
         rows.append({
             "period": year,
-            "oil_proxy": cif - fob
+            "oil_cif_unit_value": cif,
+            "oil_fob_unit_value": fob,
+            "oil_proxy": cif - fob,
         })
 
-    time.sleep(1)
+    df = pd.DataFrame(rows)
+    out_path = OUT_DIR / "oil_freight_proxy.csv"
+    df.to_csv(out_path, index=False)
 
-df = pd.DataFrame(rows)
-df.to_csv(OUT_DIR / "oil_freight_proxy.csv", index=False)
-print(df)
+    print(df)
+    print(f"Saved: {out_path}")
+
+
+if __name__ == "__main__":
+    main()
